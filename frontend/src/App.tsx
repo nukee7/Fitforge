@@ -7,23 +7,25 @@ import Index from "./pages/Index";
 import Exercises from "./pages/Exercises";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
-
+import { WorkoutProvider } from './contexts/WorkoutContext';
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/exercises" element={<Exercises />} />
-          <Route path="/progress" element={<Progress />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <WorkoutProvider>  
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/exercises" element={<Exercises />} />
+            <Route path="/progress" element={<Progress />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </WorkoutProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
