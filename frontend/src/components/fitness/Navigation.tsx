@@ -22,10 +22,18 @@ export function Navigation() {
 
             {/* Navigation Links */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="/" className="text-foreground font-semibold border-b-2 border-primary pb-1">Dashboard</a>
-              <a href="/exercises" className="text-muted-foreground hover:text-foreground font-medium transition-colors">Exercises</a>
-              <a href="/progress" className="text-muted-foreground hover:text-foreground font-medium transition-colors">Progress</a>
-            </div>
+  <a href="/"className="relative text-foreground font-semibold pb-1 group" >
+    Dashboard<span className="absolute left-0 bottom-0 w-0 h-[2px] bg-primary transition-all duration-300 group-hover:w-full"></span>
+  </a>
+
+  <a
+    href="/exercises"
+    className="relative text-foreground font-semibold pb-1 group"
+  >
+    Exercises
+    <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-primary transition-all duration-300 group-hover:w-full"></span>
+  </a>
+</div>
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-4">

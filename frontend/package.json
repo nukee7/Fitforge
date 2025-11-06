@@ -8,7 +8,9 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup": "node scripts/setup-frontend.js",
+    "test-connection": "node -e \"console.log('Testing connection...'); fetch('http://localhost:3000/api/health').then(r => r.json()).then(d => console.log('✅ Backend:', d.status)).catch(e => console.log('❌ Backend:', e.message))\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

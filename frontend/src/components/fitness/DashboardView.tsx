@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Target, Activity, Flame, Plus, Search, BarChart3, Trophy, Zap, Calendar, CheckCircle, Star } from 'lucide-react';
+import { TrendingUp, Target, Activity, Flame, Plus, Search, BarChart3, Trophy, Zap, Calendar, Dumbbell, Loader2, Clock, Repeat, ChevronLeft, ChevronRight,Star } from 'lucide-react';
 import { useWorkout } from '@/contexts/WorkoutContext';
+import { useExercises } from '@/hooks/useExercises';
 import { StatCard } from './StatCard';
 import { QuickActionCard } from './QuickActionCard';
 import { DayWorkoutCard } from './DayWorkoutCard';
@@ -10,6 +11,17 @@ import { Button } from './Button';
 export function DashboardView() {
   const { state, dispatch } = useWorkout();
   const [greeting, setGreeting] = useState('');
+  const [currentDayIndex, setCurrentDayIndex] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
+  
+  // Fetch exercises from backend
+  const {
+    exercises: allExercises,
+    loading: exercisesLoading,
+    error: exercisesError
+  } = useExercises({
+    page: 1,
+    limit: 20
+  });
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -17,6 +29,14 @@ export function DashboardView() {
     else if (hour < 18) setGreeting('Good Afternoon');
     else setGreeting('Good Evening');
   }, []);
+
+  const handlePreviousDay = () => {
+    setCurrentDayIndex((prev) => (prev === 0 ? 6 : prev - 1));
+  };
+
+  const handleNextDay = () => {
+    setCurrentDayIndex((prev) => (prev === 6 ? 0 : prev + 1));
+  };
 
   // Group workouts by date
   const workoutsByDate: Record<string, typeof state.workouts> = {};
@@ -29,14 +49,24 @@ export function DashboardView() {
   });
 
   // Get last 3 days
-  const last7Days = [];
+  const last3Days = [];
   for (let i = 2; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    last7Days.unshift(date.toDateString()); // Add to start to show most recent first
+    last3Days.unshift(date.toDateString());
   }
 
-  const todayWorkouts = workoutsByDate[new Date().toDateString()] || [];
+  // Show loading state for exercises
+  if (exercisesLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-24 md:pb-8">
@@ -80,44 +110,149 @@ export function DashboardView() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div>
+      {/* Today's Routine - Day Wise Slider */}
+      <div className="bg-gradient-to-br from-primary to-[hsl(217,91%,60%)] rounded-2xl p-6 text-white shadow-lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Your Progress</h2>
-          <Button variant="secondary" size="sm" icon={BarChart3}>
-            View Analytics
+          <div className="flex items-center gap-2">
+            <Calendar size={24} />
+            <h3 className="font-bold text-xl">Weekly Routine</h3>
+          </div>
+          <Button variant="secondary" size="sm" icon={Plus}>
+            Edit Routine
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            icon={TrendingUp}
-            label="Total Workouts"
-            value={state.stats.totalWorkouts}
-            trend="+25%"
-            color="blue"
-          />
-          <StatCard
-            icon={Target}
-            label="Total Sets"
-            value={state.stats.totalSets}
-            trend="+15%"
-            color="green"
-          />
-          <StatCard
-            icon={Activity}
-            label="Total Reps"
-            value={state.stats.totalReps}
-            trend="+30%"
-            color="purple"
-          />
-          <StatCard
-            icon={Flame}
-            label="Calories Burned"
-            value={state.stats.caloriesBurned}
-            trend="+18%"
-            color="orange"
-          />
-        </div>
+        
+        {allExercises && allExercises.length > 0 ? (
+          <div className="relative">
+            {/* Navigation Arrows */}
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={handlePreviousDay}
+                className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm border border-white/20"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              
+              <div className="text-center">
+                <h4 className="text-lg font-bold">
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][currentDayIndex]}
+                </h4>
+                <p className="text-xs text-primary-foreground/70">
+                  {currentDayIndex === (new Date().getDay() === 0 ? 6 : new Date().getDay() - 1) ? 'Today' : ''}
+                </p>
+              </div>
+              
+              <button
+                onClick={handleNextDay}
+                className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm border border-white/20"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+
+            {/* Day Content with Slide Animation */}
+            <div className="overflow-hidden">
+              <div 
+                className="transition-transform duration-300 ease-in-out"
+                style={{ transform: `translateX(0%)` }}
+              >
+                {(() => {
+                  const dayExercises = allExercises.slice(currentDayIndex * 2, currentDayIndex * 2 + 2);
+                  const isToday = currentDayIndex === (new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
+                  
+                  return (
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm text-primary-foreground/70">
+                          {dayExercises.length} exercise{dayExercises.length !== 1 ? 's' : ''} planned
+                        </span>
+                        {isToday && (
+                          <span className="px-3 py-1 bg-white/30 rounded-full text-xs font-semibold">
+                            Today's Workout
+                          </span>
+                        )}
+                      </div>
+                      
+                      {dayExercises.length > 0 ? (
+                        <div className="space-y-3">
+                          {dayExercises.map((exercise) => (
+                            <div key={exercise._id} className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <h5 className="font-semibold text-base mb-1">{exercise.name}</h5>
+                                  <p className="text-sm text-primary-foreground/70">{exercise.primaryMuscle}</p>
+                                </div>
+                                <span className="px-2 py-1 bg-white/20 rounded-lg text-xs font-semibold ml-2">
+                                  {exercise.category}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-1.5">
+                                  <Repeat size={14} />
+                                  <span>3 sets</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Target size={14} />
+                                  <span>12 reps</span>
+                                </div>
+                                {exercise.caloriesPerMinute > 0 && (
+                                  <div className="flex items-center gap-1.5">
+                                    <Flame size={14} />
+                                    <span>{exercise.caloriesPerMinute} cal/min</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="mt-3 text-xs text-primary-foreground/60">
+                                Equipment: {exercise.equipment}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-primary-foreground/70">Rest day - No exercises planned</p>
+                        </div>
+                      )}
+                      
+                      {isToday && dayExercises.length > 0 && (
+                        <Button variant="secondary" className="w-full mt-4" icon={Dumbbell}>
+                          Start Today's Workout
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Day Indicators */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentDayIndex(index)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
+                    index === currentDayIndex
+                      ? 'bg-white text-primary scale-110'
+                      : 'bg-white/20 text-white hover:bg-white/30'
+                  }`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar size={32} />
+            </div>
+            <p className="text-primary-foreground/90 mb-4">No routine set for this week</p>
+            <Button variant="secondary" icon={Plus}>
+              Create Weekly Routine
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Two Column Layout */}
@@ -149,7 +284,7 @@ export function DashboardView() {
             </div>
           </div>
 
-          {/* Workout History - Last 7 Days */}
+          {/* Workout History - Last 3 Days */}
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -162,7 +297,7 @@ export function DashboardView() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {last7Days.map((dateStr) => {
+              {last3Days.map((dateStr) => {
                 const workouts = workoutsByDate[dateStr] || [];
                 const isToday = dateStr === new Date().toDateString();
                 const isSelected = dateStr === state.selectedDate;
@@ -184,37 +319,6 @@ export function DashboardView() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Today's Goal */}
-          <div className="bg-gradient-to-br from-success to-[hsl(158,64%,52%)] rounded-2xl p-6 text-white shadow-lg">
-            <div className="flex items-center gap-2 mb-4">
-              <Target size={24} />
-              <h3 className="font-bold text-lg">Today's Goal</h3>
-            </div>
-            <p className="text-success-foreground/90 mb-4">Complete your workout session</p>
-            <div className="bg-white/20 rounded-xl p-3 backdrop-blur-sm mb-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span>Progress</span>
-                <span className="font-bold">{todayWorkouts.length > 0 ? '1/1' : '0/1'}</span>
-              </div>
-              <div className="w-full bg-white/20 rounded-full h-2">
-                <div className="bg-white h-2 rounded-full transition-all duration-500" style={{ width: todayWorkouts.length > 0 ? '100%' : '0%' }}></div>
-              </div>
-            </div>
-            {todayWorkouts.length > 0 ? (
-              <div className="bg-white/20 rounded-xl p-3 backdrop-blur-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle size={18} />
-                  <span className="font-semibold">Great job! 🎉</span>
-                </div>
-                <p className="text-sm text-success-foreground/90">You've completed your workout today!</p>
-              </div>
-            ) : (
-              <Button variant="secondary" className="w-full" icon={Plus}>
-                Start Workout
-              </Button>
-            )}
-          </div>
-
           {/* Achievements */}
           <div className="bg-card rounded-2xl shadow-lg border border-border p-6">
             <div className="flex items-center gap-2 mb-4">
