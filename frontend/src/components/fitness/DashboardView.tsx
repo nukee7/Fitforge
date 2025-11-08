@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Target, Activity, Flame, Plus, Search, BarChart3, Trophy, Zap, Calendar, Dumbbell, Loader2, Clock, Repeat, ChevronLeft, ChevronRight,Star } from 'lucide-react';
+import { TrendingUp, Target, Activity, Flame, Plus, Search, BarChart3, Trophy, Zap, Calendar, Dumbbell, Loader2, Clock, Repeat, ChevronLeft, ChevronRight, X, Edit2, Star } from 'lucide-react';
 import { useWorkout } from '@/contexts/WorkoutContext';
 import { useExercises } from '@/hooks/useExercises';
 import { StatCard } from './StatCard';
@@ -12,6 +12,17 @@ export function DashboardView() {
   const { state, dispatch } = useWorkout();
   const [greeting, setGreeting] = useState('');
   const [currentDayIndex, setCurrentDayIndex] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showExerciseModal, setShowExerciseModal] = useState(false);
+  const [weeklyRoutine, setWeeklyRoutine] = useState<Record<number, any[]>>({
+    0: [], // Monday
+    1: [], // Tuesday
+    2: [], // Wednesday
+    3: [], // Thursday
+    4: [], // Friday
+    5: [], // Saturday
+    6: []  // Sunday
+  });
   
   // Fetch exercises from backend
   const {
@@ -20,7 +31,7 @@ export function DashboardView() {
     error: exercisesError
   } = useExercises({
     page: 1,
-    limit: 20
+    limit: 50
   });
 
   useEffect(() => {
@@ -28,7 +39,21 @@ export function DashboardView() {
     if (hour < 12) setGreeting('Good Morning');
     else if (hour < 18) setGreeting('Good Afternoon');
     else setGreeting('Good Evening');
-  }, []);
+    
+    // Initialize routine with some exercises for demo
+    if (allExercises.length > 0 && Object.values(weeklyRoutine).every(day => day.length === 0)) {
+      const initialRoutine: Record<number, any[]> = {
+        0: allExercises.slice(0, 2),
+        1: allExercises.slice(2, 4),
+        2: allExercises.slice(4, 6),
+        3: allExercises.slice(6, 8),
+        4: allExercises.slice(8, 10),
+        5: [],
+        6: []
+      };
+      setWeeklyRoutine(initialRoutine);
+    }
+  }, [allExercises]);
 
   const handlePreviousDay = () => {
     setCurrentDayIndex((prev) => (prev === 0 ? 6 : prev - 1));
@@ -36,6 +61,25 @@ export function DashboardView() {
 
   const handleNextDay = () => {
     setCurrentDayIndex((prev) => (prev === 6 ? 0 : prev + 1));
+  };
+
+  const handleToggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+  };
+
+  const handleAddExerciseToDay = (exercise: any) => {
+    setWeeklyRoutine(prev => ({
+      ...prev,
+      [currentDayIndex]: [...prev[currentDayIndex], exercise]
+    }));
+    setShowExerciseModal(false);
+  };
+
+  const handleRemoveExercise = (exerciseId: string) => {
+    setWeeklyRoutine(prev => ({
+      ...prev,
+      [currentDayIndex]: prev[currentDayIndex].filter(ex => ex._id !== exerciseId)
+    }));
   };
 
   // Group workouts by date
@@ -117,8 +161,13 @@ export function DashboardView() {
             <Calendar size={24} />
             <h3 className="font-bold text-xl">Weekly Routine</h3>
           </div>
-          <Button variant="secondary" size="sm" icon={Plus}>
-            Edit Routine
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            icon={isEditMode ? X : Edit2}
+            onClick={handleToggleEditMode}
+          >
+            {isEditMode ? 'Done' : 'Edit Routine'}
           </Button>
         </div>
         
@@ -157,7 +206,7 @@ export function DashboardView() {
                 style={{ transform: `translateX(0%)` }}
               >
                 {(() => {
-                  const dayExercises = allExercises.slice(currentDayIndex * 2, currentDayIndex * 2 + 2);
+                  const dayExercises = weeklyRoutine[currentDayIndex] || [];
                   const isToday = currentDayIndex === (new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
                   
                   return (
@@ -176,7 +225,15 @@ export function DashboardView() {
                       {dayExercises.length > 0 ? (
                         <div className="space-y-3">
                           {dayExercises.map((exercise) => (
-                            <div key={exercise._id} className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors">
+                            <div key={exercise._id} className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors relative group">
+                              {isEditMode && (
+                                <button
+                                  onClick={() => handleRemoveExercise(exercise._id)}
+                                  className="absolute top-2 right-2 w-6 h-6 bg-destructive hover:bg-destructive/80 rounded-full flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                  <X size={14} />
+                                </button>
+                              )}
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
                                   <h5 className="font-semibold text-base mb-1">{exercise.name}</h5>
@@ -210,11 +267,24 @@ export function DashboardView() {
                         </div>
                       ) : (
                         <div className="text-center py-8">
-                          <p className="text-primary-foreground/70">Rest day - No exercises planned</p>
+                          <p className="text-primary-foreground/70 mb-4">
+                            {isEditMode ? 'No exercises planned - Add some below' : 'Rest day - No exercises planned'}
+                          </p>
                         </div>
                       )}
                       
-                      {isToday && dayExercises.length > 0 && (
+                      {isEditMode && (
+                        <Button 
+                          variant="secondary" 
+                          className="w-full mt-4" 
+                          icon={Plus}
+                          onClick={() => setShowExerciseModal(true)}
+                        >
+                          Add Exercise to {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][currentDayIndex]}
+                        </Button>
+                      )}
+                      
+                      {!isEditMode && isToday && dayExercises.length > 0 && (
                         <Button variant="secondary" className="w-full mt-4" icon={Dumbbell}>
                           Start Today's Workout
                         </Button>
@@ -254,6 +324,56 @@ export function DashboardView() {
           </div>
         )}
       </div>
+
+      {/* Exercise Selection Modal */}
+      {showExerciseModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-border flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-foreground">Add Exercise</h3>
+              <button
+                onClick={() => setShowExerciseModal(false)}
+                className="w-10 h-10 bg-secondary hover:bg-secondary/80 rounded-full flex items-center justify-center transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {allExercises.map(exercise => (
+                  <div
+                    key={exercise._id}
+                    className="bg-secondary rounded-xl p-4 hover:bg-secondary/80 transition-colors cursor-pointer border border-border"
+                    onClick={() => handleAddExerciseToDay(exercise)}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h4 className="font-bold text-foreground mb-1">{exercise.name}</h4>
+                        <p className="text-sm text-muted-foreground">{exercise.primaryMuscle}</p>
+                      </div>
+                      <span className="px-2 py-1 bg-primary/10 text-primary rounded-lg text-xs font-semibold ml-2">
+                        {exercise.category}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>{exercise.equipment}</span>
+                      <span>•</span>
+                      <span className={`${
+                        exercise.difficulty === 'Beginner' ? 'text-success' :
+                        exercise.difficulty === 'Intermediate' ? 'text-warning' :
+                        'text-destructive'
+                      }`}>
+                        {exercise.difficulty}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
