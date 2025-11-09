@@ -375,34 +375,41 @@ export function DashboardView() {
         </div>
       )}
 
+      {/* Quick Actions - Full Width Horizontal */}
+      <div>
+        <h2 className="text-2xl font-bold text-foreground mb-6">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div onClick={() => window.location.href = '/workouts'}>
+            <QuickActionCard
+              icon={Plus}
+              title="Log Workout"
+              description="Record your training session"
+              color="from-primary to-[hsl(217,91%,50%)]"
+            />
+          </div>
+          <div onClick={() => window.location.href = '/exercises'}>
+            <QuickActionCard
+              icon={Search}
+              title="Browse Exercises"
+              description="Explore 1000+ exercises"
+              color="from-accent to-[hsl(262,83%,48%)]"
+            />
+          </div>
+          <div onClick={() => window.location.href = '/analytics'}>
+            <QuickActionCard
+              icon={BarChart3}
+              title="View Analytics"
+              description="Track your progress"
+              color="from-success to-[hsl(158,64%,52%)]"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content - Workout History */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Quick Actions */}
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <QuickActionCard
-                icon={Plus}
-                title="Log Workout"
-                description="Record your training session"
-                color="from-primary to-[hsl(217,91%,50%)]"
-              />
-              <QuickActionCard
-                icon={Search}
-                title="Browse Exercises"
-                description="Explore 1000+ exercises"
-                color="from-accent to-[hsl(262,83%,48%)]"
-              />
-              <QuickActionCard
-                icon={BarChart3}
-                title="View Analytics"
-                description="Track your progress"
-                color="from-success to-[hsl(158,64%,52%)]"
-              />
-            </div>
-          </div>
 
           {/* Workout History - Last 3 Days */}
           <div>
@@ -439,31 +446,6 @@ export function DashboardView() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Achievements */}
-          <div className="bg-card rounded-2xl shadow-lg border border-border p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Trophy size={24} className="text-[hsl(45,93%,55%)]" />
-              <h3 className="font-bold text-foreground">Achievements</h3>
-            </div>
-            <div className="space-y-3">
-              <AchievementBadge
-                icon={Star}
-                title="Week Warrior"
-                date="Earned 2 days ago"
-              />
-              <AchievementBadge
-                icon={Flame}
-                title="100 Workouts"
-                date="Earned 5 days ago"
-              />
-              <AchievementBadge
-                icon={Trophy}
-                title="Consistency King"
-                date="Earned 1 week ago"
-              />
-            </div>
-          </div>
-
           {/* Motivational Quote */}
           <div className="bg-gradient-to-br from-accent to-[hsl(320,85%,58%)] rounded-2xl p-6 text-white shadow-lg">
             <div className="text-center">
@@ -473,6 +455,52 @@ export function DashboardView() {
               <p className="font-bold text-lg mb-2">"Your only limit is you"</p>
               <p className="text-accent-foreground/90 text-sm">Stay focused and push harder today!</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Achievements - Horizontal at End */}
+      <div className="bg-card rounded-2xl shadow-lg border border-border p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Trophy size={24} className="text-[hsl(45,93%,55%)]" />
+          <h3 className="font-bold text-foreground text-xl">Recent Achievements</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-[hsl(45,93%,55%)] to-[hsl(45,93%,45%)] rounded-xl p-4 text-white">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <Star size={24} />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-base">Week Warrior</h4>
+                <p className="text-xs text-white/80">Earned 2 days ago</p>
+              </div>
+            </div>
+            <p className="text-sm text-white/90">Completed 7 consecutive days of workouts</p>
+          </div>
+          <div className="bg-gradient-to-br from-[hsl(15,100%,60%)] to-[hsl(15,100%,50%)] rounded-xl p-4 text-white">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <Flame size={24} />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-base">100 Workouts</h4>
+                <p className="text-xs text-white/80">Earned 5 days ago</p>
+              </div>
+            </div>
+            <p className="text-sm text-white/90">Reached the milestone of 100 total workouts</p>
+          </div>
+          <div className="bg-gradient-to-br from-primary to-[hsl(217,91%,50%)] rounded-xl p-4 text-white">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <Trophy size={24} />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-base">Consistency King</h4>
+                <p className="text-xs text-white/80">Earned 1 week ago</p>
+              </div>
+            </div>
+            <p className="text-sm text-white/90">Maintained workout streak for 30 days</p>
           </div>
         </div>
       </div>
