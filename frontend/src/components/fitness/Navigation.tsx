@@ -33,6 +33,14 @@ export function Navigation() {
     Exercises
     <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-primary transition-all duration-300 group-hover:w-full"></span>
   </a>
+
+  <a
+    href="/progress"
+    className="relative text-foreground font-semibold pb-1 group"
+  >
+    Progress
+    <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-primary transition-all duration-300 group-hover:w-full"></span>
+  </a>
 </div>
 
             {/* Right Side Actions */}
